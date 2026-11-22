@@ -1,0 +1,19 @@
+[package]
+name = "htmlgo_core"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+jni-sys = "0.2"
+memchr = "2.7"
+libc = "0.2"
+base64 = "0.22"
+zip = { version = "2.2", default-features = false, features = ["deflate"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1

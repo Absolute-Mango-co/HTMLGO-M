@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>HW Accel & DOM Storage Test</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .watch-card {
+            width: 92vw;
+            height: 92vw;
+            max-width: 320px;
+            max-height: 320px;
+            background: radial-gradient(circle, #1c1c1e 0%, #000000 100%);
+            border-radius: 50%;
+            border: 2px solid #38B6FF;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 12px;
+            text-align: center;
+            box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.9);
+        }
+        .header {
+            font-size: 11px;
+            font-weight: 800;
+            color: #38B6FF;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+        canvas {
+            width: 90px;
+            height: 90px;
+            background: #111113;
+            border-radius: 12px;
+            border: 1px solid #333333;
+            margin: 4px 0;
+        }
+        .status-row {
+            font-size: 10px;
+            color: #8E8E93;
+            margin-bottom: 4px;
+        }
+        .badge {
+            display: inline-block;
+            background: #1C3B2B;
+            color: #81C784;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 9px;
+            margin-top: 2px;
+        }
+        .storage-box {
+            background: #2c2c2e;
+            padding: 6px 10px;
+            border-radius: 10px;
+            width: 85%;
+            margin-top: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .storage-val {
+            font-size: 14px;
+            font-weight: bold;
+            color: #FFD54F;
+        }
+        .btn-small {
+            background: #38B6FF;
+            color: #000;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 10px;
+            cursor: pointer;
+        }
+        .btn-small:active {
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="watch-card">
+        <div class="header">HW Accel & DOM Storage</div>
+        <canvas id="glCanvas" width="90" height="90"></canvas>
+        <div class="status-row">
+            FPS: <span id="fpsText" style="color:#81D4FA; font-weight:bold;">0</span> | <span id="gpuText">2D/GL</span>
+        </div>
+
+        <div class="storage-box">
+            <div style="font-size:10px; color:#aaa;">LocalStore:</div>
+            <div class="storage-val" id="storageVal">0</div>
+            <button class="btn-small" onclick="incrementStorage()">+ Save</button>
+        </div>
+        <div class="badge" id="storageBadge">DOM Storage Active</div>
+    </div>
+
+    <script>
+        // --- 1. Canvas Hardware Acceleration 3D Cube Animation ---
+        const canvas = document.getElementById('glCanvas');
+        const ctx = canvas.getContext('2d');
+        let angle = 0;
+        let lastTime = performance.now();
+        let frameCount = 0;
+
+        function drawCube() {
+            const now = performance.now();
+            frameCount++;
+            if (now - lastTime >= 1000) {
+                document.getElementById('fpsText').innerText = frameCount;
+                frameCount = 0;
+                lastTime = now;
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.translate(45, 45);
+
+            angle += 0.04;
+            const size = 20;
+
+            // Animated 3D-like rotating cube wireframe
+            const nodes = [
+                [-size, -size, -size], [size, -size, -size],
+                [size, size, -size], [-size, size, -size],
+                [-size, -size, size], [size, -size, size],
+                [size, size, size], [-size, size, size]
+            ];
+
+            const rotated = nodes.map(node => {
+                let x = node[0], y = node[1], z = node[2];
+                // Rotate Y
+                let rx = x * Math.cos(angle) - z * Math.sin(angle);
+                let rz = x * Math.sin(angle) + z * Math.cos(angle);
+                // Rotate X
+                let ry = y * Math.cos(angle * 0.7) - rz * Math.sin(angle * 0.7);
+                rz = y * Math.sin(angle * 0.7) + rz * Math.cos(angle * 0.7);
+                return [rx, ry, rz];
+            });
+
+            ctx.strokeStyle = '#38B6FF';
+            ctx.lineWidth = 1.8;
+
+            const edges = [
+                [0,1],[1,2],[2,3],[3,0],
+                [4,5],[5,6],[6,7],[7,4],
+                [0,4],[1,5],[2,6],[3,7]
+            ];
+
+            ctx.beginPath();
+            edges.forEach(edge => {
+                const p1 = rotated[edge[0]];
+                const p2 = rotated[edge[1]];
+                ctx.moveTo(p1[0], p1[1]);
+                ctx.lineTo(p2[0], p2[1]);
+            });
+            ctx.stroke();
+
+            ctx.restore();
+            requestAnimationFrame(drawCube);
+        }
+
+        // Detect GPU or WebGL capability
+        try {
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            if (gl) {
+                document.getElementById('gpuText').innerText = "WebGL GPU";
+            }
+        } catch(e) {}
+
+        requestAnimationFrame(drawCube);
+
+        // --- 2. DOM LocalStorage Test ---
+        const KEY = "htmlgow_test_counter";
+        function loadStorage() {
+            try {
+                let val = localStorage.getItem(KEY);
+                if (val === null) {
+                    val = "0";
+                    localStorage.setItem(KEY, val);
+                }
+                document.getElementById('storageVal').innerText = val;
+                document.getElementById('storageBadge').innerText = "DOM Storage Active";
+                document.getElementById('storageBadge').style.background = "#1C3B2B";
+                document.getElementById('storageBadge').style.color = "#81C784";
+            } catch (e) {
+                document.getElementById('storageBadge').innerText = "DOM Storage Disabled";
+                document.getElementById('storageBadge').style.background = "#3B1C1C";
+                document.getElementById('storageBadge').style.color = "#EF9A9A";
+            }
+        }
+
+        function incrementStorage() {
+            try {
+                let val = parseInt(localStorage.getItem(KEY) || "0") + 1;
+                localStorage.setItem(KEY, val.toString());
+                document.getElementById('storageVal').innerText = val;
+            } catch(e) {
+                alert("Storage error: " + e);
+            }
+        }
+
+        loadStorage();
+    </script>
+</body>
+</html>
