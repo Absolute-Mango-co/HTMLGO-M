@@ -18,13 +18,20 @@ This repository represents the **final archived source release (`v2.0R - EOL / B
 
 ## Key Features
 
-- **Dual Rendering Engine Architecture:**
-  - **Lite Variant:** Uses Android's hardware-accelerated system `WebView` for ultra-fast cold starts and a compact APK footprint.
-  - **Standard Variant:** Combines hardware `WebView` with an embedded **Mozilla GeckoView** runtime for full desktop-grade HTML5, CSS, and WebGL compatibility.
-- **Offline Workspace, FTP & Bundle Loader:** Open single HTML documents or packaged `.zip` web projects directly from device storage, backed by a native Rust core (`rust-core`) and embedded Apache FTP server for local asset transfer.
-- **Built-in Code Editor & AI Workflow:** Integrated **Sora Editor** (`:editor`) with TextMate/Monarch syntax highlighting, live previewing, Markdown + LaTeX math rendering, and Gemini API integration.
-- **Refractive Liquid Glass UI:** Built with **Jetpack Compose**, **Material 3 Expressive**, **Haze**, and **AGSL shaders (`AGLS-BackdropV5.6`)** featuring dynamic Material You (Monet) theming and AMOLED-friendly dark surfaces.
-- **Wear OS Companion (`htmlgow`):** Includes a standalone Wear OS module with an edge-sliding drawer, rotating-bezel navigation, and embedded GeckoView support for running web apps on smartwatches.
+### Workspace & Web Execution
+- **Offline Workspace Launcher:** Searchable recent-files history supporting local HTML files, pasted snippets, and external web bundles with quick file-type badges.
+- **Dual Rendering Engine Architecture:** Switch between hardware-accelerated system `WebView` (fast startup, lightweight footprint) and embedded **Mozilla GeckoView** (full desktop-grade HTML5, CSS, and WebGL compatibility), alongside on-the-fly **DOM Storage** and **Hardware Acceleration** toggles.
+- **Built-in Archive Tools:** Integrated **Compressor** and **Decompressor** utilities to package HTML projects into `.zip` bundles or extract `.zip` archives straight into playable workspace folders.
+
+### Creation & System Suite
+- **AI Forge Studio:** Built-in AI web-app generator with live HTML previews, instant **Play** execution, and a hardware-encrypted **Bring Your Own Key (BYOK) Vault** supporting primary/backup API key failover, custom system prompts (*Mr. Forger* mode), custom JSON payloads, and multi-model selection.
+- **Workspace File Editor:** Dedicated local `/workspace` file manager and **Sora Editor** integration with TextMate/Monarch syntax highlighting for creating and editing HTML, CSS, JS, and JSON files on-device.
+- **Emergency Browser:** Lightweight built-in web browser with liquid tabs, bottom address bar, and one-tap quick shortcuts.
+
+### Customization & Wear OS Sync
+- **Wear OS Companion (`HTMLGO-W`):** Dedicated watch connection dashboard for pairing with **HTMLGO-W** and sending HTML apps or `.zip` bundles directly to your smartwatch over the Wear OS Data Layer.
+- **Dynamic Monet & Expressive Themes:** Live Material 3 Expressive theming computed from your system wallpaper across **9 color schemes** (*Dynamic Monet*, *Tonal Spot*, *Neutral*, *Vibrant*, *Expressive*, *Fidelity*, *Content*, *Monochrome*, *Rainbow*, and *Fruit Salad*).
+- **Extra Black Mode & Shader Controls:** Pure `#000000` AMOLED dark theme with a toggleable **Solid Gradient Mode** to disable blur/backdrop effects for maximum battery life and older devices.
 
 ---
 
@@ -36,6 +43,7 @@ Prebuilt signed APKs are available on the [Releases](https://github.com/Absolute
 | :--- | :--- | :--- |
 | **HTMLGO-M Lite** | Hardware System `WebView` | Lightweight installs, fast startup, standard HTML5 apps |
 | **HTMLGO-M Standard** | Hardware `WebView` + Mozilla `GeckoView` | Heavy WebGL shaders, complex JS engines, standalone rendering |
+| **HTMLGO-W** | Wear OS Standalone Companion | Running web bundles & receiving files on Wear OS smartwatches |
 
 ---
 
