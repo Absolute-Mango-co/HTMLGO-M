@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HTMLGO-M — Offline Web Workspace &amp; AI Sandbox</title>
+  <meta name="description" content="HTMLGO-M (com.absolutemango.htmlgom) is an offline-first Web Application Runner, Local Workspace Engine, and AI-assisted HTML/WebGL sandbox for Android and Wear OS." />
+  <meta name="theme-color" content="#040806" />
+  <style>
+    :root {
+      --bg-base: #040806;
+      --glass-bg: rgba(9, 17, 13, 0.52);
+      --glass-bg-hover: rgba(14, 26, 20, 0.68);
+      --glass-border: rgba(52, 211, 153, 0.14);
+      --glass-border-gold: rgba(212, 175, 55, 0.28);
+
+      --text-primary: #f2f7f4;
+      --text-secondary: #9eb3a8;
+      --text-muted: #677d72;
+
+      --accent-green: #10b981;
+      --accent-jade: #34d399;
+      --accent-gold: #d4af37;
+      --accent-gold-bright: #f3d266;
+
+      --radius-lg: 22px;
+      --radius-md: 14px;
+      --radius-pill: 9999px;
+      --header-height: 66px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Inter, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+      position: relative;
+    }
+
+    /* Subtle Green & Gold Ambient Glow (low opacity to avoid cloudy washout) */
+    .ambient-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      overflow: hidden;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 0%, #091710 0%, #040806 62%);
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(115px);
+      will-change: transform;
+      animation: floatOrb 20s ease-in-out infinite alternate;
+    }
+
+    .orb-1 {
+      width: 440px;
+      height: 440px;
+      background: var(--accent-green);
+      top: -140px;
+      left: -90px;
+      opacity: 0.16;
+    }
+
+    .orb-2 {
+      width: 400px;
+      height: 400px;
+      background: var(--accent-gold);
+      top: 16%;
+      right: -130px;
+      animation-delay: -7s;
+      opacity: 0.14;
+    }
+
+    .orb-3 {
+      width: 460px;
+      height: 460px;
+      background: #059669;
+      bottom: -160px;
+      left: 24%;
+      animation-delay: -12s;
+      opacity: 0.12;
+    }
+
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(30px, 40px) scale(1.08); }
+    }
+
+    /* Sticky Collapsing Blurred Header (crisp, non-cloudy glass) */
+    .site-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--header-height);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 20px;
+      transition: background-color 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease;
+      background-color: rgba(4, 8, 6, 0);
+      border-bottom: 1px solid transparent;
+    }
+
+    .site-header.scrolled {
+      background-color: rgba(5, 11, 8, 0.72);
+      backdrop-filter: blur(12px) saturate(125%);
+      -webkit-backdrop-filter: blur(12px) saturate(125%);
+      border-bottom: 1px solid var(--glass-border);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    }
+
+    .header-inner {
+      width: 100%;
+      max-width: 1040px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+      opacity: 0;
+      transform: translateY(10px) scale(0.96);
+      pointer-events: none;
+      transition: opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1), transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .site-header.scrolled .header-brand {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+
+    .brand-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-jade), var(--accent-gold-bright));
+      box-shadow: 0 0 10px rgba(212, 175, 55, 0.55);
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-link {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      padding: 8px 14px;
+      border-radius: var(--radius-pill);
+      transition: color 0.2s ease, background-color 0.2s ease;
+    }
+
+    .nav-link:hover {
+      color: var(--text-primary);
+      background: rgba(52, 211, 153, 0.08);
+    }
+
+    .nav-cta {
+      color: #040806;
+      background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-bright));
+      border: 1px solid rgba(243, 210, 102, 0.45);
+      padding: 8px 16px;
+      font-weight: 700;
+    }
+
+    .nav-cta:hover {
+      background: linear-gradient(135deg, #e0bd48, #fae084);
+      color: #040806;
+    }
+
+    /* Main Container */
+    main {
+      width: 100%;
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: calc(var(--header-height) + 48px) 20px 80px;
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      padding: 36px 0 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: var(--text-secondary);
+    }
+
+    .badge.eol {
+      color: var(--accent-gold-bright);
+      border-color: var(--glass-border-gold);
+      background: rgba(212, 175, 55, 0.09);
+    }
+
+    .badge.gpl {
+      color: var(--accent-jade);
+      border-color: rgba(52, 211, 153, 0.28);
+      background: rgba(16, 185, 129, 0.09);
+    }
+
+    .hero-title {
+      font-size: clamp(3rem, 9vw, 5.4rem);
+      font-weight: 800;
+      letter-spacing: -0.045em;
+      line-height: 1.02;
+      margin-bottom: 18px;
+      background: linear-gradient(180deg, #ffffff 12%, #6ee7b7 56%, #d4af37 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      transform-origin: center top;
+      will-change: transform, opacity;
+    }
+
+    .hero-subtitle {
+      max-width: 680px;
+      font-size: clamp(1.02rem, 2.2vw, 1.2rem);
+      color: var(--text-secondary);
+      margin-bottom: 34px;
+    }
+
+    .hero-subtitle code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.9em;
+      color: var(--accent-jade);
+      background: rgba(16, 185, 129, 0.1);
+      padding: 2px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(52, 211, 153, 0.22);
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 14px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px 24px;
+      border-radius: var(--radius-pill);
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      color: #040806;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-bright));
+      box-shadow: 0 6px 22px rgba(212, 175, 55, 0.24);
+      border: 1px solid rgba(255, 236, 168, 0.45);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(212, 175, 55, 0.36);
+    }
+
+    .btn-glass {
+      color: var(--text-primary);
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .btn-glass:hover {
+      transform: translateY(-2px);
+      background: var(--glass-bg-hover);
+      border-color: var(--glass-border-gold);
+    }
+
+    /* Section Headings */
+    section {
+      margin-top: 64px;
+    }
+
+    .section-title {
+      font-size: 1.65rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-desc {
+      color: var(--text-secondary);
+      margin-bottom: 26px;
+      font-size: 0.98rem;
+    }
+
+    .section-desc a {
+      color: var(--accent-gold-bright);
+      text-decoration: none;
+    }
+
+    .section-desc a:hover {
+      text-decoration: underline;
+    }
+
+    /* Crisp Dark Glass Cards (low blur, clear contrast) */
+    .glass-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      backdrop-filter: blur(8px) saturate(120%);
+      -webkit-backdrop-filter: blur(8px) saturate(120%);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 10px 26px rgba(0, 0, 0, 0.38);
+      transition: transform 0.22s ease, border-color 0.22s ease, background-color 0.22s ease;
+    }
+
+    .glass-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--glass-border-gold);
+      background: var(--glass-bg-hover);
+    }
+
+    /* EOL Notice Callout */
+    .callout {
+      border-left: 3px solid var(--accent-gold);
+      background: linear-gradient(90deg, rgba(212, 175, 55, 0.09), rgba(9, 17, 13, 0.55));
+    }
+
+    .callout h3 {
+      color: var(--accent-gold-bright);
+      font-size: 1.05rem;
+      margin-bottom: 6px;
+    }
+
+    .callout p {
+      color: var(--text-secondary);
+      font-size: 0.94rem;
+    }
+
+    /* Features Grid */
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+    }
+
+    .feature-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      margin-bottom: 14px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(212, 175, 55, 0.26);
+    }
+
+    .glass-card h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+
+    .glass-card p {
+      font-size: 0.92rem;
+      color: var(--text-secondary);
+    }
+
+    .glass-card code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.86em;
+      color: var(--accent-jade);
+    }
+
+    /* Downloads Grid */
+    .download-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .dl-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .dl-size {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--accent-gold-bright);
+      background: rgba(212, 175, 55, 0.1);
+      border: 1px solid rgba(212, 175, 55, 0.28);
+      padding: 3px 10px;
+      border-radius: var(--radius-pill);
+    }
+
+    /* Markdown-style Code Block */
+    .md-block {
+      background: rgba(5, 10, 8, 0.82);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .md-block-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--glass-border);
+      background: rgba(16, 185, 129, 0.05);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    pre {
+      padding: 18px;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.86rem;
+      line-height: 1.65;
+      color: #d6e6dd;
+    }
+
+    .cmd-comment { color: #5f7a6c; }
+    .cmd-accent { color: var(--accent-gold-bright); }
+
+    /* Footer */
+    footer {
+      margin-top: 84px;
+      padding-top: 28px;
+      border-top: 1px solid var(--glass-border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+
+    footer a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    footer a:hover {
+      color: var(--accent-gold-bright);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 18px;
+    }
+
+    @media (max-width: 640px) {
+      .nav-link:not(.nav-cta) {
+        display: none;
+      }
+      .hero {
+        padding: 20px 0 44px;
+      }
+      .glass-card {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient-bg" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- Sticky Collapsing Blurred Header -->
+  <header class="site-header" id="siteHeader">
+    <div class="header-inner">
+      <a href="#" class="header-brand" aria-label="HTMLGO-M Home">
+        <span class="brand-dot"></span>
+        <span>HTMLGO-M</span>
+      </a>
+      <nav class="header-nav">
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#downloads" class="nav-link">Downloads</a>
+        <a href="#build" class="nav-link">Source</a>
+        <a href="https://github.com/Absolute-Mango-co/HTMLGO-M/releases/tag/Release-final" target="_blank" rel="noopener" class="nav-link nav-cta">Download</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero" style="margin-top: 0;">
+      <div class="badge-row">
+        <span class="badge gpl">GPL-3.0 Open Source</span>
+        <span class="badge eol">v2.0R - EOL (Final Archive)</span>
+        <span class="badge">Android &amp; Wear OS</span>
+      </div>
+
+      <h1 class="hero-title" id="heroTitle">HTMLGO-M</h1>
+
+      <p class="hero-subtitle">
+        An offline-first Web Application Runner, Local Workspace Engine, and AI-assisted HTML/WebGL sandbox
+        (<code>com.absolutemango.htmlgom</code>) built natively for Android and Wear OS.
+      </p>
+
+      <div class="hero-actions">
+        <a href="https://github.com/Absolute-Mango-co/HTMLGO-M/releases/tag/Release-final" target="_blank" rel="noopener" class="btn btn-primary">
+          Download v2.0R-EOL
+        </a>
+        <a href="https://github.com/Absolute-Mango-co/HTMLGO-M" target="_blank" rel="noopener" class="btn btn-glass">
+          View on GitHub
+        </a>
+      </div>
+    </section>
+
+    <!-- EOL Callout -->
+    <div class="glass-card callout">
+      <h3>Status &amp; End-of-Life Notice</h3>
+      <p>
+        This page documents the final archived release (<strong>v2.0R - EOL / Build 4</strong>) of HTMLGO-M.
+        Active feature development has concluded, and the complete multi-module codebase is published under
+        the <strong>GNU General Public License v3.0 (GPL-3.0)</strong> as a permanent community archive.
+      </p>
+    </div>
+
+    <!-- Features -->
+    <section id="features">
+      <h2 class="section-title">Key Features</h2>
+      <p class="section-desc">Run standalone HTML files, ZIP web bundles, WebGL shaders, and Markdown/LaTeX documents with zero external servers.</p>
+
+      <div class="grid-3">
+        <article class="glass-card">
+          <div class="feature-icon">⚡</div>
+          <h3>Dual Rendering Engines</h3>
+          <p>Switch seamlessly between hardware-accelerated system <strong>WebView</strong> for instant startup and embedded <strong>Mozilla GeckoView</strong> for desktop-grade WebGL &amp; HTML5.</p>
+        </article>
+
+        <article class="glass-card">
+          <div class="feature-icon">✨</div>
+          <h3>AI Forge Studio</h3>
+          <p>Generate and live-preview web apps on-device with one-tap Play execution, a hardware-encrypted <strong>BYOK Vault</strong>, backup API failover, and custom <em>Mr. Forger</em> prompts.</p>
+        </article>
+
+        <article class="glass-card">
+          <div class="feature-icon">⌚</div>
+          <h3>Wear OS Companion</h3>
+          <p>Pair with <strong>HTMLGO-W</strong> to send HTML apps and <code>.zip</code> bundles directly to your smartwatch over the Wear OS Data Layer with rotating-bezel navigation.</p>
+        </article>
+
+        <article class="glass-card">
+          <div class="feature-icon">🛠️</div>
+          <h3>Workspace &amp; Sora Editor</h3>
+          <p>Manage local <code>/workspace</code> projects with built-in <strong>Sora Editor</strong> syntax highlighting, an <strong>Emergency Browser</strong>, and native Rust-powered ZIP archive tools.</p>
+        </article>
+
+        <article class="glass-card">
+          <div class="feature-icon">🎨</div>
+          <h3>Liquid Glass &amp; Monet</h3>
+          <p>Material 3 Expressive theming computed live from your wallpaper across <strong>9 color schemes</strong>, powered by AGSL refractive shaders and Haze blur layers.</p>
+        </article>
+
+        <article class="glass-card">
+          <div class="feature-icon">🖤</div>
+          <h3>AMOLED &amp; Solid Mode</h3>
+          <p>Pure <code>#000000</code> Extra Black mode for OLED panels, plus a toggleable <strong>Solid Gradient Mode</strong> to disable blur overlays for maximum battery efficiency.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Downloads -->
+    <section id="downloads">
+      <h2 class="section-title">Release Variants</h2>
+      <p class="section-desc">
+        Prebuilt signed APKs from
+        <a href="https://github.com/Absolute-Mango-co/HTMLGO-M/releases/tag/Release-final" target="_blank" rel="noopener">
+          Release-final (v2.0R - EOL)
+        </a>.
+      </p>
+
+      <div class="grid-3">
+        <div class="glass-card download-card">
+          <div>
+            <div class="dl-meta">
+              <h3>HTMLGO-M Lite</h3>
+              <span class="dl-size">19.1 MB</span>
+            </div>
+            <p>Uses hardware system <strong>WebView</strong>. Compact install size, ultra-fast cold starts, ideal for standard HTML5 apps and daily use.</p>
+          </div>
+          <a href="https://github.com/Absolute-Mango-co/HTMLGO-M/releases/download/Release-final/htmlgom-lite-release.apk" class="btn btn-glass">
+            Download Lite APK
+          </a>
+        </div>
+
+        <div class="glass-card download-card">
+          <div>
+            <div class="dl-meta">
+              <h3>HTMLGO-M Standard</h3>
+              <span class="dl-size">88.6 MB</span>
+            </div>
+            <p>Combines system <strong>WebView</strong> + embedded <strong>Mozilla GeckoView</strong> for heavy WebGL shaders and complex JS engines.</p>
+          </div>
+          <a href="https://github.com/Absolute-Mango-co/HTMLGO-M/releases/download/Release-final/htmlgom-standard-release.apk" class="btn btn-primary">
+            Download Standard APK
+          </a>
+        </div>
+
+        <div class="glass-card download-card">
+          <div>
+            <div class="dl-meta">
+              <h3>HTMLGO-W (Wear OS)</h3>
+              <span class="dl-size">65.8 MB</span>
+            </div>
+            <p>Standalone Wear OS companion module with edge drawer, rotating bezel controls, and embedded GeckoView support.</p>
+          </div>
+          <a href="https://github.com/Absolute-Mango-co/HTMLGO-M/releases/download/Release-final/htmlgow-release.apk" class="btn btn-glass">
+            Download Wear OS APK
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Build from Source -->
+    <section id="build">
+      <h2 class="section-title">Build from Source</h2>
+      <p class="section-desc">Requires JDK 17+, Android SDK, and the Rust toolchain for <code>app/htmlgom/rust-core</code>.</p>
+
+      <div class="md-block">
+        <div class="md-block-header">
+          <span>bash</span>
+          <span>Gradle Multi-Module</span>
+        </div>
+        <pre><code><span class="cmd-comment"># 1. Clone the repository</span>
+<span class="cmd-accent">git clone</span> https://github.com/Absolute-Mango-co/HTMLGO-M.git
+<span class="cmd-accent">cd</span> HTMLGO-M
+
+<span class="cmd-comment"># 2. Build the Android mobile APK</span>
+./gradlew :app:htmlgom:assembleRelease
+
+<span class="cmd-comment"># 3. Build the Wear OS companion APK</span>
+./gradlew :htmlgow:assembleRelease</code></pre>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <div>
+        Built by <strong>Mr. Mangosteen</strong> (<a href="https://github.com/Absolute-Mango-co" target="_blank" rel="noopener">Absolute-Mango-co</a>) &middot; Licensed under GPL-3.0
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/Absolute-Mango-co/HTMLGO-M" target="_blank" rel="noopener">Repository</a>
+        <a href="https://github.com/Absolute-Mango-co/HTMLGO-M/releases/tag/Release-final" target="_blank" rel="noopener">Release-final</a>
+        <a href="https://t.me/Anonymous_pro1483" target="_blank" rel="noopener">Telegram</a>
+      </div>
+    </footer>
+  </main>
+
+  <script>
+    const header = document.getElementById('siteHeader');
+    const heroTitle = document.getElementById('heroTitle');
+
+    function updateScrollEffects() {
+      const y = window.scrollY;
+      const collapseDistance = 170;
+      const progress = Math.min(Math.max(y / collapseDistance, 0), 1);
+
+      heroTitle.style.opacity = String(1 - progress * 1.15);
+      heroTitle.style.transform = `translateY(${progress * -22}px) scale(${1 - progress * 0.16})`;
+
+      if (y > 95) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+    }
+
+    window.addEventListener('scroll', () => {
+      window.requestAnimationFrame(updateScrollEffects);
+    }, { passive: true });
+
+    updateScrollEffects();
+  </script>
+</body>
+  </html>
+  
